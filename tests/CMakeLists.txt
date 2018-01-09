@@ -28,3 +28,4 @@ function(vir_add_test name)
 endfunction()
 
 vir_add_test(extendlifetime)
+vir_add_test(constexpr_if)
