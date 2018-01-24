@@ -107,4 +107,46 @@ TEST(struct_element)
   COMPARE(typeid(vir::struct_element_t<2, F>), typeid(int *const));
   COMPARE(typeid(vir::struct_element_t<3, F>), typeid(const int *const));
 }
+
+TEST(as_tuple)
+{
+  {
+    A a{1};
+    std::tuple<int> tup_a1 = vir::as_tuple(a);
+    std::tuple<int &> tup_a2 = vir::as_tuple(a);
+    std::tuple<const int &> tup_a3 = vir::as_tuple(a);
+    COMPARE(a.a, 1);
+    COMPARE(std::get<0>(tup_a1), 1);
+    COMPARE(std::get<0>(tup_a2), 1);
+    COMPARE(std::get<0>(tup_a3), 1);
+    a.a = 2;
+    COMPARE(a.a, 2);
+    COMPARE(std::get<0>(tup_a1), 1);
+    COMPARE(std::get<0>(tup_a2), 2);
+    COMPARE(std::get<0>(tup_a3), 2);
+    std::get<0>(tup_a2) = 3;
+    COMPARE(a.a, 3);
+    COMPARE(std::get<0>(tup_a1), 1);
+    COMPARE(std::get<0>(tup_a2), 3);
+    COMPARE(std::get<0>(tup_a3), 3);
+  }
+
+  {
+    const A a{2};
+    std::tuple<int> tup1 = vir::as_tuple(a);
+    std::tuple<const int &> tup2 = vir::as_tuple(a);
+    COMPARE(std::get<0>(tup1), 2);
+    COMPARE(std::get<0>(tup2), 2);
+    COMPARE(typeid(std::tuple_element_t<0, decltype(vir::as_tuple(a))>), typeid(int));
+    COMPARE(typeid(vir::as_tuple(a)), typeid(std::tuple<const int &>));
+  }
+
+  {
+    F f{0, 0, 0, 0};
+    int tmp = 1;
+    std::get<0>(vir::as_tuple(f)) = &tmp;
+    COMPARE(f.a, &tmp);
+    COMPARE(std::get<0>(vir::as_tuple(f)), &tmp);
+  }
+}
 #endif  // __cpp_structured_bindings

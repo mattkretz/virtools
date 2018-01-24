@@ -55,11 +55,16 @@ constexpr size_t struct_size(std::index_sequence<Indexes...>, float)
 }
 
 // struct_get implementation {{{2
-template <size_t N, size_t Total> struct struct_get;
+template <size_t Total> struct struct_get;
 
 #ifdef __cpp_structured_bindings
-template <size_t N> struct struct_get<N, 1> {
-  template <class T> auto &operator()(T &&obj)
+template <> struct struct_get<1> {
+  template <class T> auto as_tuple(T &&obj)
+  {
+    auto && [a] = std::forward<T>(obj);
+    return std::tie(a);
+  }
+  template <size_t N, class T> auto &get(T &&obj)
   {
     auto && [a] = std::forward<T>(obj);
     auto &b = a;
@@ -68,8 +73,13 @@ template <size_t N> struct struct_get<N, 1> {
 };
 
 #define VIR_STRUCT_GET_(size_, ...)                                                      \
-  template <size_t N> struct struct_get<N, size_> {                                      \
-    template <class T> auto &operator()(T &&obj)                                         \
+  template <> struct struct_get<size_> {                                                 \
+    template <class T> auto as_tuple(T &&obj)                                            \
+    {                                                                                    \
+      auto && [__VA_ARGS__] = std::forward<T>(obj);                                      \
+      return std::tie(__VA_ARGS__);                                                      \
+    }                                                                                    \
+    template <size_t N, class T> auto &get(T &&obj)                                      \
     {                                                                                    \
       auto && [__VA_ARGS__] = std::forward<T>(obj);                                      \
       return std::get<N>(std::tie(__VA_ARGS__));                                         \
@@ -119,19 +129,31 @@ constexpr std::size_t struct_size =
 /**
  * Returns a cv-qualified reference to the \p N -th non-static data member in \p obj.
  */
-template <std::size_t N, class T, std::size_t Total = struct_size<T>,
+template <std::size_t N, class T, std::size_t Total = struct_size<std::decay_t<T>>,
           class = std::enable_if_t<(N < Total)>>
-auto &struct_get(const T &obj)
+auto &struct_get(T &&obj)
 {
 #ifndef __cpp_structured_bindings
   static_assert(N > Total, "struct_get requires structured bindings (C++17)");
 #endif
-  return detail::struct_get<N, Total>()(obj);
+  return detail::struct_get<Total>().template get<N>(std::forward<T>(obj));
 }
 
+/**
+ * An alias for the type of the \p N -th non-static data member of \p T.
+ */
 template <std::size_t N, class T>
 using struct_element_t =
     std::remove_reference_t<decltype(struct_get<N>(std::declval<T &>()))>;
+
+/**
+ * Returns a std::tuple of lvalue references to all the non-static data members of \p obj.
+ */
+template <class T, std::size_t Total = struct_size<std::decay_t<T>>>
+auto as_tuple(T &&obj)
+{
+  return detail::struct_get<Total>().as_tuple(std::forward<T>(obj));
+}
 
 }  // namespace vir
 
