@@ -42,3 +42,4 @@ endfunction()
 
 vir_add_test(extendlifetime)
 vir_add_test(constexpr_if)
+vir_add_test(struct_reflect)
