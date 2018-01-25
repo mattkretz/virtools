@@ -71,10 +71,9 @@ TEST(struct_size)
   COMPARE(vir::struct_size<D>, 1u);
   COMPARE(vir::struct_size<E>, 4u);
   COMPARE(vir::struct_size<F>, 4u);
-  COMPARE((vir::struct_size<std::array<int, 4>>), 4u);
 }
 
-#ifdef __cpp_structured_bindings
+#ifdef VIR_HAVE_STRUCT_GET
 TEST(struct_get)
 {
   COMPARE(typeid(vir::struct_get<0>(A())), typeid(const int &));
@@ -149,4 +148,4 @@ TEST(as_tuple)
     COMPARE(std::get<0>(vir::as_tuple(f)), &tmp);
   }
 }
-#endif  // __cpp_structured_bindings
+#endif  // VIR_HAVE_STRUCT_GET

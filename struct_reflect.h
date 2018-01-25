@@ -30,6 +30,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <utility>
 #include <tuple>
 
+#ifdef __cpp_structured_bindings
+#if !(defined __clang_major__ && __clang_major__ == 5 && __clang_minor__ == 0 &&         \
+      __clang_patchlevel__ < 1)  // clang 5.0.0 breaks on structured bindings
+#define VIR_HAVE_STRUCT_GET 1
+#endif
+#endif
+
 namespace vir
 {
 namespace detail  //{{{1
@@ -58,7 +65,7 @@ constexpr size_t struct_size(std::index_sequence<Indexes...>, float)
 // struct_get implementation {{{2
 template <size_t Total> struct struct_get;
 
-#ifdef __cpp_structured_bindings
+#ifdef VIR_HAVE_STRUCT_GET
 template <> struct struct_get<1> {
   template <class T> auto as_tuple(T &&obj)
   {
@@ -112,7 +119,7 @@ VIR_STRUCT_GET_( 4, a, b, c, d);
 VIR_STRUCT_GET_( 3, a, b, c);
 VIR_STRUCT_GET_( 2, a, b);
 #undef VIR_STRUCT_GET_
-#endif  // __cpp_structured_bindings
+#endif  // VIR_HAVE_STRUCT_GET
 
 }  // namespace detail }}}1
 
@@ -134,7 +141,7 @@ template <std::size_t N, class T, std::size_t Total = struct_size<std::decay_t<T
           class = std::enable_if_t<(N < Total)>>
 auto &struct_get(T &&obj)
 {
-#ifndef __cpp_structured_bindings
+#ifndef VIR_HAVE_STRUCT_GET
   static_assert(N > Total, "struct_get requires structured bindings (C++17)");
 #endif
   return detail::struct_get<Total>().template get<N>(std::forward<T>(obj));
