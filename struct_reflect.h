@@ -28,6 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef VIR_STRUCT_SIZE_H_
 #define VIR_STRUCT_SIZE_H_
 #include <utility>
+#include <tuple>
 
 namespace vir
 {
