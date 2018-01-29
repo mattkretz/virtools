@@ -28,17 +28,47 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <vir/test.h>
 #include "../constexpr_if.h"
 
-TEST_TYPES(T, foo, std::true_type, std::false_type)
+template <class T> int foo()
 {
-  Vir_CONSTEXPR_IF(T::value)
+  Vir_CONSTEXPR_IF_RETURNING(T::value == 1) { return 1; }
+  Vir_CONSTEXPR_ELSE_IF(T::value == 2) { return 2; }
+  Vir_CONSTEXPR_ELSE_IF(T::value == 1) { return 3; }
+  Vir_CONSTEXPR_ELSE_IF(T::value == 0) { return 0; }
+  Vir_CONSTEXPR_ELSE { return 4; }
+  Vir_CONSTEXPR_ENDIF
+}
+
+TEST_TYPES(T, foo, std::integral_constant<int, 0>, std::integral_constant<int, 1>,
+           std::integral_constant<int, 2>)
+{
+  Vir_CONSTEXPR_IF(T::value == 1)
   {
-      VERIFY(T::value);
-      static_assert(T::value, "");
+      COMPARE(T::value, 1);
+      static_assert(T::value == 1, "");
+  }
+  Vir_CONSTEXPR_ENDIF
+
+  Vir_CONSTEXPR_IF(T::value == 1)
+  {
+      COMPARE(T::value, 1);
+      static_assert(T::value == 1, "");
+  }
+  Vir_CONSTEXPR_ELSE_IF(T::value == 2)
+  {
+      COMPARE(T::value, 2);
+      static_assert(T::value == 2, "");
+  }
+  Vir_CONSTEXPR_ELSE_IF(T::value == 1)
+  {
+      FAIL() << "this must be unreachable";
+      static_assert(T::value == 2, "this must be unreachable at compile time");
   }
   Vir_CONSTEXPR_ELSE
   {
-      VERIFY(!T::value);
-      static_assert(!T::value, "");
+      COMPARE(T::value, 0);
+      static_assert(T::value == 0, "");
   }
   Vir_CONSTEXPR_ENDIF
+
+  COMPARE(foo<T>(), T::value);
 }

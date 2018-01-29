@@ -55,16 +55,36 @@ inline auto constexpr_if(IfFun &&if_fun, ElseFun &&else_fun)
       std::integral_constant<bool, Condition>(), std::forward<IfFun>(if_fun),
       std::forward<ElseFun>(else_fun));
 }
+
+template <bool Condition, class IfFun>
+inline auto constexpr_if(IfFun &&if_fun)
+{
+  return ::vir::detail::impl_or_fallback_dispatch(
+      std::integral_constant<bool, Condition>(), std::forward<IfFun>(if_fun), [](int) {});
+}
+
+template <bool Condition, bool Condition2, class IfFun, class... Remainder>
+inline auto constexpr_if(IfFun &&if_fun, std::integral_constant<bool, Condition2>,
+                         Remainder &&... rem)
+{
+  return ::vir::detail::impl_or_fallback_dispatch(
+      std::integral_constant<bool, Condition>(), std::forward<IfFun>(if_fun), [&](auto) {
+        return ::vir::constexpr_if<Condition2>(std::forward<Remainder>(rem)...);
+      });
+}
+
 }  // namespace vir
 
 #ifdef __cpp_if_constexpr
 #define Vir_CONSTEXPR_IF_RETURNING(condition_) if constexpr (condition_) {
 #define Vir_CONSTEXPR_IF(condition_) if constexpr (condition_) {
+#define Vir_CONSTEXPR_ELSE_IF(condition_) } else if constexpr (condition_) {
 #define Vir_CONSTEXPR_ELSE } else {
 #define Vir_CONSTEXPR_ENDIF }
 #else
 #define Vir_CONSTEXPR_IF_RETURNING(condition_) return vir::constexpr_if<(condition_)>([&](auto) {
 #define Vir_CONSTEXPR_IF(condition_) vir::constexpr_if<(condition_)>([&](auto) {
+#define Vir_CONSTEXPR_ELSE_IF(condition_) }, std::integral_constant<bool, (condition_)>(), [&](auto) {
 #define Vir_CONSTEXPR_ELSE }, [&](auto) {
 #define Vir_CONSTEXPR_ENDIF });
 #endif
