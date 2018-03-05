@@ -36,15 +36,15 @@ namespace vir
 namespace detail
 {
 template <class IfFun, class ElseFun>
-inline auto impl_or_fallback_dispatch(std::true_type, IfFun &&fun, ElseFun &&)
+inline auto impl_or_fallback_dispatch(std::true_type, IfFun &&true_fun, ElseFun &&)
 {
-  return fun(0);
+  return true_fun(0);
 }
 
 template <class IfFun, class ElseFun>
-inline auto impl_or_fallback_dispatch(std::false_type, IfFun &&, ElseFun &&fun)
+inline auto impl_or_fallback_dispatch(std::false_type, IfFun &&, ElseFun &&else_fun)
 {
-  return fun(0);
+  return else_fun(0);
 }
 }  // namespace detail
 
@@ -52,15 +52,14 @@ template <bool Condition, class IfFun, class ElseFun>
 inline auto constexpr_if(IfFun &&if_fun, ElseFun &&else_fun)
 {
   return ::vir::detail::impl_or_fallback_dispatch(
-      std::integral_constant<bool, Condition>(), std::forward<IfFun>(if_fun),
-      std::forward<ElseFun>(else_fun));
+      std::integral_constant<bool, Condition>(), if_fun, else_fun);
 }
 
 template <bool Condition, class IfFun>
 inline auto constexpr_if(IfFun &&if_fun)
 {
   return ::vir::detail::impl_or_fallback_dispatch(
-      std::integral_constant<bool, Condition>(), std::forward<IfFun>(if_fun), [](int) {});
+      std::integral_constant<bool, Condition>(), if_fun, [](int) {});
 }
 
 template <bool Condition, bool Condition2, class IfFun, class... Remainder>
@@ -68,8 +67,9 @@ inline auto constexpr_if(IfFun &&if_fun, std::integral_constant<bool, Condition2
                          Remainder &&... rem)
 {
   return ::vir::detail::impl_or_fallback_dispatch(
-      std::integral_constant<bool, Condition>(), std::forward<IfFun>(if_fun), [&](auto) {
-        return ::vir::constexpr_if<Condition2>(std::forward<Remainder>(rem)...);
+      std::integral_constant<bool, Condition>(), if_fun, [&](auto tmp_) {
+        return ::vir::constexpr_if<(std::is_same<decltype(tmp_), int>::value &&
+                                    Condition2)>(rem...);
       });
 }
 

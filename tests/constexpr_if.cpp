@@ -38,37 +38,40 @@ template <class T> int foo()
   Vir_CONSTEXPR_ENDIF
 }
 
+template <bool C> void my_assert() { static_assert(C, ""); }
+
 TEST_TYPES(T, foo, std::integral_constant<int, 0>, std::integral_constant<int, 1>,
            std::integral_constant<int, 2>)
 {
-  Vir_CONSTEXPR_IF(T::value == 1)
+  constexpr int N = T::value;
+  Vir_CONSTEXPR_IF(N == 1)
   {
-      COMPARE(T::value, 1);
-      static_assert(T::value == 1, "");
+      COMPARE(N, 1);
+      my_assert<N == 1>();
   }
   Vir_CONSTEXPR_ENDIF
 
-  Vir_CONSTEXPR_IF(T::value == 1)
+  Vir_CONSTEXPR_IF(N == 1)
   {
-      COMPARE(T::value, 1);
-      static_assert(T::value == 1, "");
+      COMPARE(N, 1);
+      my_assert<N == 1>();
   }
-  Vir_CONSTEXPR_ELSE_IF(T::value == 2)
+  Vir_CONSTEXPR_ELSE_IF(N == 2)
   {
-      COMPARE(T::value, 2);
-      static_assert(T::value == 2, "");
+      COMPARE(N, 2);
+      my_assert<N == 2>();
   }
-  Vir_CONSTEXPR_ELSE_IF(T::value == 1)
+  Vir_CONSTEXPR_ELSE_IF(N == 1)
   {
       FAIL() << "this must be unreachable";
-      static_assert(T::value == 2, "this must be unreachable at compile time");
+      my_assert<N == 1>();
   }
   Vir_CONSTEXPR_ELSE
   {
-      COMPARE(T::value, 0);
-      static_assert(T::value == 0, "");
+      COMPARE(N, 0);
+      my_assert<N == 0>();
   }
   Vir_CONSTEXPR_ENDIF
 
-  COMPARE(foo<T>(), T::value);
+  COMPARE(foo<T>(), N);
 }
