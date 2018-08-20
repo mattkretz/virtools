@@ -73,7 +73,9 @@ public:
                         ts - (tw - tw_req) * skip_check_count * 1 / 2);
           //std::cerr << s.str() << "maybe_sleep: going too slow; sleep less: " << duration_cast<microseconds>(ts).count() << "µs\n";
         } else {
-          skip_check_count = (skip_check_count * 5 + 3) / 4;
+          skip_check_count =
+              std::min(int(seconds(1) / tw_req),  // recheck at least every second
+                       (skip_check_count * 5 + 3) / 4);
           //std::cerr << s.str() << "maybe_sleep: going too slow; work more: " << skip_check_count << "\n";
         }
       } else if (tw < tw_req * 63 / 64) {
