@@ -37,13 +37,30 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 namespace vir
 {
+/**
+ * Objects of type RateLimiter can be used to limit a loop to a given rate of iterations per second.
+ *
+ * Example:
+ * \code
+ * RateLimiter limit(100);  // 100 Hz
+ * while (do_more_work()) {
+ *   work();
+ *   limit.maybe_sleep();   // this needs to be at the end of the loop for a
+ *                          // correct time measurement of the first iterations
+ * }
+ * \endcode
+ */
 class RateLimiter
 {
   using clock = std::chrono::steady_clock;
 
 public:
   /**
-   * \param rate Work rate in Hz (calls to maybe_sleep per second)
+   * Constructs a rate limiter.
+   *
+   * \param rate Work rate in Hz (calls to maybe_sleep per second). Values less than/equal
+   *             to 0 set the rate to 1 GHz (which is impossible to achieve, even with a
+   *             loop that only calls RateLimiter::maybe_sleep).
    */
   RateLimiter(float rate) : tw_req(std::chrono::seconds(1)), start_time(clock::now())
   {
@@ -57,6 +74,13 @@ public:
     //std::cerr << "skip_check_count: " << skip_check_count << '\n';
   }
 
+  /**
+   * Call this function at the end of the iteration rate limited loop.
+   *
+   * This function might use `std::this_thread::sleep_for` to limit the iteration rate. If no sleeps
+   * are necessary, the function will back off checking for the time to further allow increased
+   * iteration rates (until the requested rate or 1s between rechecks is reached).
+   */
   void maybe_sleep()
   {
     using namespace std::chrono;
@@ -104,17 +128,16 @@ public:
 
       start_time = now;
       count = skip_check_count;
-      //if (ts > clock::duration::zero()) {
+      if (ts > clock::duration::zero()) {
         std::this_thread::sleep_for(ts);
-      //}
+      }
     }
   }
 
 private:
-  // ts: sleep duration
-  // tw: deduced duration between maybe_sleep calls
-  // tw_req: requested duration between maybe_sleep calls
-  clock::duration tw{}, ts{}, tw_req;
+  clock::duration tw{},  //! deduced duration between maybe_sleep calls
+      ts{},              //! sleep duration
+      tw_req;            //! requested duration between maybe_sleep calls
   clock::time_point start_time;
   int count = 1;
   int skip_check_count = 1;
