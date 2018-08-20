@@ -45,9 +45,13 @@ public:
   /**
    * \param rate Work rate in Hz (calls to maybe_sleep per second)
    */
-  RateLimiter(int rate) : tw_req(std::chrono::seconds(1)), start_time(clock::now())
+  RateLimiter(float rate) : tw_req(std::chrono::seconds(1)), start_time(clock::now())
   {
-    tw_req /= rate;
+    if (rate <= 0) {
+      tw_req = std::chrono::nanoseconds(1);
+    } else {
+      tw_req = std::chrono::duration_cast<clock::duration>(tw_req / rate);
+    }
     skip_check_count = std::max(1, int(std::chrono::milliseconds(5) / tw_req));
     count = skip_check_count;
     //std::cerr << "skip_check_count: " << skip_check_count << '\n';

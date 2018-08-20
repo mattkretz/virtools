@@ -32,7 +32,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 int main() {
   for (int tw : {0, 10, 1000, 100000}) {
-    for (int rate : {1, 10, 100, 1000, 10000, 100000, 1000000, 10000000}) {
+    for (float rate : {0.1f, 1.5f, 1.f, 10.f, 100.f, 1000.f, 10000.f, 100000.f, 1000000.f,
+                       10000000.f}) {
       // consider tw as ~ns
       if (tw >= 1'000'000'000ll / rate) {
         continue;
