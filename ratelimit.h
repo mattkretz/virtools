@@ -107,11 +107,9 @@ public:
   }
 
 private:
-  // t0: previous measured duration of work + limit logic + sleep
-  // t1: current measured duration of work + limit logic + sleep
-  // tw: deduced duration per single w() invocation
-  // tt: duration of the rate limiting logic
   // ts: sleep duration
+  // tw: deduced duration between maybe_sleep calls
+  // tw_req: requested duration between maybe_sleep calls
   clock::duration tw{}, ts{}, tw_req;
   clock::time_point start_time;
   int count = 1;
