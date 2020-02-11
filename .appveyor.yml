@@ -12,6 +12,8 @@ install:
 
 build_script:
 - cmd: >-
+    CALL "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\Tools\VsDevCmd.bat" -arch=%PLATFORM% -host_arch=%PLATFORM% -no_logo
+
     cmake -G "NMake Makefiles" .
 
     nmake
