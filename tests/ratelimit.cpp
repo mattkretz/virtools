@@ -33,48 +33,62 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <intrin.h>
 #endif
 
-int main() {
-  for (int tw : {0, 10, 1000, 100000}) {
-    std::atomic<unsigned> count = {};
-    std::atomic<bool> quit = false;
+struct Tester {
+  std::string result;
+  std::thread thr;
 
-    std::thread rate_checker([&count, &quit]() {
-      std::this_thread::sleep_for(std::chrono::milliseconds(1));
-      while (true) {
-        const unsigned lastcount = count;
-        std::this_thread::sleep_for(std::chrono::seconds(1));
-        const unsigned elapsed = count - lastcount;
-        if (quit) {
-          return;
+  Tester(int tw, float rate)
+      : thr([=, this] {
+        const auto start = std::chrono::steady_clock::now();
+        vir::RateLimiter limiter(rate);
+        unsigned count = 0;
+        while (count < rate * 40) {
+          ++count;
+          for (int i = tw; i; --i) {
+#ifdef _MSC_VER
+            __nop();
+#else
+            asm volatile("nop");
+#endif
+          }
+          limiter.maybe_sleep();
         }
-        std::cout << elapsed << " Hz\n" << std::flush;
-      }
-    });
+        const auto stop = std::chrono::steady_clock::now();
+        const std::chrono::duration<double> elapsed = stop - start;
+        result += "requested rate: ";
+        result += std::to_string(rate);
+        result += " Hz, measured rate: ";
+        result += std::to_string(count / elapsed.count());
+        result += ", work loop: ";
+        result += std::to_string(tw);
+      })
+  {
+  }
 
+  void join()
+  {
+    thr.join();
+    std::cout << result << '\n';
+  }
+};
+
+int main()
+{
+  std::vector<Tester> testers;
+  testers.reserve(4 * 10);
+  for (int tw : {0, 10, 1000, 100000}) {
     for (float rate : {0.1f, 1.f, 1.5f, 10.f, 100.f, 1000.f, 10000.f, 100000.f, 1000000.f,
                        10000000.f}) {
       // consider tw as ~ns
-      if (tw >= 1'000'000'000ll / rate) {
+      if (tw >= 10'000'000'000ll / rate) {
         continue;
       }
-      std::cerr << "requested rate: " << rate << " Hz, work loop: " << tw << '\n';
-
-      vir::RateLimiter limiter(rate);
-      while (count < rate * 20) {
-        ++count;
-        for (int i = tw; i; --i) {
-#ifdef _MSC_VER
-          __nop();
-#else
-          asm volatile("nop");
-#endif
-        }
-        limiter.maybe_sleep();
-      }
+      testers.emplace_back(tw, rate);
     }
-
-    quit = true;
-    rate_checker.join();
   }
-  return 0;
+  std::cout << "testing RateLimiter with " << testers.size()
+            << " configurations in progress...\n" << std::flush;
+  for (auto& t : testers) {
+    t.join();
+  }
 }
