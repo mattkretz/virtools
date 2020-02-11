@@ -54,8 +54,8 @@ struct D {
 struct E {
   A a;
   volatile B b;
-  const C &c;
   const volatile D d;
+  const C &c;
 };
 
 struct F {
@@ -74,6 +74,19 @@ struct Empty2 {};
 struct H3 : Empty1, Empty2 { int a, b; };
 struct H4 { H1 a, b; };
 struct H5 { Empty1 a, b; };
+struct H6 {
+  Empty1 a, b, c, d, e, f, g, h, i, j;
+  Empty1 &k;
+};
+struct Bitfield {
+  const int a : 1;
+  const int b : 1;
+  const int c : 1;
+  const int d : 1;
+  const int e : 1;
+  const int f : 1;
+  const int g : 1;
+};
 
 TEST(struct_size)
 {
@@ -90,14 +103,15 @@ TEST(struct_size)
   COMPARE(vir::struct_size<H3>, 2u);
   COMPARE(vir::struct_size<H4>, 2u);
   COMPARE(vir::struct_size<H5>, 2u);
+  COMPARE(vir::struct_size<H6>, 11u);
+  COMPARE(vir::struct_size<Bitfield>, 7u);
   COMPARE((vir::struct_size<std::pair<int, float>>), 2u);
   COMPARE((vir::struct_size<std::tuple<int, float, int>>), 3u);
 }
 
-template <typename T> struct Foo {};
-
 TEST(as_tuple_t)
 {
+  COMPARE_TYPES(vir::as_tuple_t<Empty1>, std::tuple<>);
   COMPARE_TYPES(vir::as_tuple_t<A>, std::tuple<int>);
   COMPARE_TYPES(vir::as_tuple_t<const A>, const std::tuple<int>);
   COMPARE_TYPES(vir::as_tuple_t<B>, std::tuple<std::array<int, 2>>);
@@ -105,6 +119,9 @@ TEST(as_tuple_t)
   COMPARE_TYPES(vir::as_tuple_t<D>, std::tuple<decltype(D().c)>);
   COMPARE_TYPES(vir::as_tuple_t<F>, std::tuple<int *, const int *, int *const, const int *const>);
   COMPARE_TYPES(vir::as_tuple_t<const F>, const std::tuple<int *, const int *, int *const, const int *const>);
+  COMPARE_TYPES(vir::as_tuple_t<Bitfield>,
+                std::tuple<const int, const int, const int, const int, const int,
+                           const int, const int>);
   COMPARE_TYPES(vir::as_tuple_t<std::pair<int, const int>>, std::tuple<int, const int>);
   COMPARE_TYPES(decltype(vir::to_tuple_ref(std::pair<int, const int>())), std::tuple<int&, const int&>);
 }
@@ -129,13 +146,13 @@ TEST(struct_get)
   const E &ce = e;
   COMPARE_TYPES(decltype(vir::struct_get<0>(ce)), const A &);
   COMPARE_TYPES(decltype(vir::struct_get<1>(ce)), const volatile B &);
-  COMPARE_TYPES(decltype(vir::struct_get<2>(ce)), const C &);
-  COMPARE_TYPES(decltype(vir::struct_get<3>(ce)), const volatile D &);
+  COMPARE_TYPES(decltype(vir::struct_get<2>(ce)), const volatile D &);
+  COMPARE_TYPES(decltype(vir::struct_get<3>(ce)), const C &);
 
   COMPARE_TYPES(decltype(vir::struct_get<0>(e)), A &);
   COMPARE_TYPES(decltype(vir::struct_get<1>(e)), volatile B &);
-  COMPARE_TYPES(decltype(vir::struct_get<2>(e)), const C &);
-  COMPARE_TYPES(decltype(vir::struct_get<3>(e)), const volatile D &);
+  COMPARE_TYPES(decltype(vir::struct_get<2>(e)), const volatile D &);
+  COMPARE_TYPES(decltype(vir::struct_get<3>(e)), const C &);
 
   H2 h2{};
   COMPARE_TYPES(decltype(vir::struct_get<0>(h2)), float &);
@@ -149,8 +166,8 @@ TEST(struct_element)
 {
   COMPARE_TYPES(vir::struct_element_t<0, E>, A);
   COMPARE_TYPES(vir::struct_element_t<1, E>, volatile B);
-  COMPARE_TYPES(vir::struct_element_t<2, E>, const C);
-  COMPARE_TYPES(vir::struct_element_t<3, E>, const volatile D);
+  COMPARE_TYPES(vir::struct_element_t<2, E>, const volatile D);
+  COMPARE_TYPES(vir::struct_element_t<3, E>, const C);
 
   COMPARE_TYPES(vir::struct_element_t<0, F>, int *);
   COMPARE_TYPES(vir::struct_element_t<1, F>, const int *);

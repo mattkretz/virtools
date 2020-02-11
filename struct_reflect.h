@@ -31,6 +31,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define VIR_HAVE_STRUCT_REFLECT 1
 #include <utility>
 #include <tuple>
+#include <climits>
 
 namespace vir
 {
@@ -43,7 +44,7 @@ using std::size_t;
 template <class Struct> struct anything_but_base_of {
   template <class T>
   requires(!std::is_base_of_v<T, Struct>)
-  operator T();
+  operator T&();
 };
 
 template <class Struct> struct any_empty_base_of {
@@ -52,96 +53,57 @@ template <class Struct> struct any_empty_base_of {
   operator T();
 };
 
-#define VIR_DEFINE_TEST_FUNCTIONS_(size_, ...)                                           \
-  template <class T> constexpr auto test_##size_(const T *obj = nullptr)                 \
-  {                                                                                      \
-    [[maybe_unused]] const auto &[__VA_ARGS__] = *obj;                                   \
-  }
-VIR_DEFINE_TEST_FUNCTIONS_(26, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z);
-VIR_DEFINE_TEST_FUNCTIONS_(25, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y);
-VIR_DEFINE_TEST_FUNCTIONS_(24, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x);
-VIR_DEFINE_TEST_FUNCTIONS_(23, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w);
-VIR_DEFINE_TEST_FUNCTIONS_(22, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v);
-VIR_DEFINE_TEST_FUNCTIONS_(21, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u);
-VIR_DEFINE_TEST_FUNCTIONS_(20, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t);
-VIR_DEFINE_TEST_FUNCTIONS_(19, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s);
-VIR_DEFINE_TEST_FUNCTIONS_(18, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r);
-VIR_DEFINE_TEST_FUNCTIONS_(17, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q);
-VIR_DEFINE_TEST_FUNCTIONS_(16, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p);
-VIR_DEFINE_TEST_FUNCTIONS_(15, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o);
-VIR_DEFINE_TEST_FUNCTIONS_(14, a, b, c, d, e, f, g, h, i, j, k, l, m, n);
-VIR_DEFINE_TEST_FUNCTIONS_(13, a, b, c, d, e, f, g, h, i, j, k, l, m);
-VIR_DEFINE_TEST_FUNCTIONS_(12, a, b, c, d, e, f, g, h, i, j, k, l);
-VIR_DEFINE_TEST_FUNCTIONS_(11, a, b, c, d, e, f, g, h, i, j, k);
-VIR_DEFINE_TEST_FUNCTIONS_(10, a, b, c, d, e, f, g, h, i, j);
-VIR_DEFINE_TEST_FUNCTIONS_( 9, a, b, c, d, e, f, g, h, i);
-VIR_DEFINE_TEST_FUNCTIONS_( 8, a, b, c, d, e, f, g, h);
-VIR_DEFINE_TEST_FUNCTIONS_( 7, a, b, c, d, e, f, g);
-VIR_DEFINE_TEST_FUNCTIONS_( 6, a, b, c, d, e, f);
-VIR_DEFINE_TEST_FUNCTIONS_( 5, a, b, c, d, e);
-VIR_DEFINE_TEST_FUNCTIONS_( 4, a, b, c, d);
-VIR_DEFINE_TEST_FUNCTIONS_( 3, a, b, c);
-VIR_DEFINE_TEST_FUNCTIONS_( 2, a, b);
-VIR_DEFINE_TEST_FUNCTIONS_( 1, a);
-#undef VIR_DEFINE_TEST_FUNCTIONS_
-
 template <class T, size_t... Indexes>
 concept brace_constructible =
-(
    requires { T{((void)Indexes, anything_but_base_of<T>())...}; }
 || requires { T{any_empty_base_of<T>(), ((void)Indexes, anything_but_base_of<T>())...}; }
 || requires { T{any_empty_base_of<T>(), any_empty_base_of<T>(), ((void)Indexes, anything_but_base_of<T>())...}; }
-|| requires { T{any_empty_base_of<T>(), any_empty_base_of<T>(), any_empty_base_of<T>(), ((void)Indexes, anything_but_base_of<T>())...}; }
-) && (
-   (sizeof...(Indexes) ==  1 && requires { test_1 <T>(); })
-|| (sizeof...(Indexes) ==  2 && requires { test_2 <T>(); }) 
-|| (sizeof...(Indexes) ==  3 && requires { test_3 <T>(); }) 
-|| (sizeof...(Indexes) ==  4 && requires { test_4 <T>(); }) 
-|| (sizeof...(Indexes) ==  5 && requires { test_5 <T>(); }) 
-|| (sizeof...(Indexes) ==  6 && requires { test_6 <T>(); }) 
-|| (sizeof...(Indexes) ==  7 && requires { test_7 <T>(); }) 
-|| (sizeof...(Indexes) ==  8 && requires { test_8 <T>(); }) 
-|| (sizeof...(Indexes) ==  9 && requires { test_9 <T>(); }) 
-|| (sizeof...(Indexes) == 10 && requires { test_10<T>(); }) 
-|| (sizeof...(Indexes) == 11 && requires { test_11<T>(); }) 
-|| (sizeof...(Indexes) == 12 && requires { test_12<T>(); }) 
-|| (sizeof...(Indexes) == 13 && requires { test_13<T>(); }) 
-|| (sizeof...(Indexes) == 14 && requires { test_14<T>(); }) 
-|| (sizeof...(Indexes) == 15 && requires { test_15<T>(); }) 
-|| (sizeof...(Indexes) == 16 && requires { test_16<T>(); }) 
-|| (sizeof...(Indexes) == 17 && requires { test_17<T>(); }) 
-|| (sizeof...(Indexes) == 18 && requires { test_18<T>(); }) 
-|| (sizeof...(Indexes) == 19 && requires { test_19<T>(); }) 
-|| (sizeof...(Indexes) == 20 && requires { test_20<T>(); }) 
-|| (sizeof...(Indexes) == 21 && requires { test_21<T>(); }) 
-|| (sizeof...(Indexes) == 22 && requires { test_22<T>(); }) 
-|| (sizeof...(Indexes) == 23 && requires { test_23<T>(); })
-|| (sizeof...(Indexes) == 24 && requires { test_24<T>(); })
-|| (sizeof...(Indexes) == 25 && requires { test_25<T>(); })
-|| (sizeof...(Indexes) == 26 && requires { test_26<T>(); })
-);
+|| requires { T{any_empty_base_of<T>(), any_empty_base_of<T>(), any_empty_base_of<T>(), ((void)Indexes, anything_but_base_of<T>())...}; };
 
 template <class T, size_t... Indexes>
-requires brace_constructible<T, Indexes...>
-constexpr size_t struct_size(std::index_sequence<Indexes...>)
+constexpr bool brace_constructible_helper(std::index_sequence<Indexes...>)
 {
-  return sizeof...(Indexes);
+  return brace_constructible<T, Indexes...>;
 }
 
-template <class T>
-requires requires { T{}; }
-constexpr size_t struct_size(std::index_sequence<>)
-{
-  static_assert(std::is_empty_v<T>,
-                "Increase MaxSize on your struct_size call. (Or you found a bug)");
-  return 0;
-}
+template <class T, size_t N>
+concept aggregate_with_n_members =
+    brace_constructible_helper<T>(std::make_index_sequence<N>());
 
-template <class T, size_t I0, size_t... Indexes>
-requires(!brace_constructible<T, I0, Indexes...>)
-constexpr size_t struct_size(std::index_sequence<I0, Indexes...>)
+template <class T, size_t Lo = 0, size_t Hi = sizeof(T) * CHAR_BIT, size_t N = 8>
+constexpr size_t struct_size()
 {
-  return struct_size<T>(std::index_sequence<Indexes...>());
+  constexpr size_t left_index = Lo + (N - Lo) / 2;
+  constexpr size_t right_index = N + (Hi - N + 1) / 2;
+  if constexpr (aggregate_with_n_members<T, N>) {  // N is a valid size
+    if constexpr (N == Hi) {  // we found the best valid size inside [Lo, Hi]
+      return N;
+    } else {  // there may be a larger size in [N+1, Hi]
+      constexpr size_t right = struct_size<T, N + 1, Hi, right_index>();
+      if constexpr (right == 0) {  // no, there isn't
+        return N;
+      } else {  // there is
+        return right;
+      }
+    }
+  } else if constexpr (N == Lo) {  // we can only look for a valid size in [N+1, Hi]
+    if constexpr (N == Hi) {       // but [N+1, Hi] is empty
+      return 0;                    // no valid size found
+    } else {                       // [N+1, Hi] is non-empty
+      return struct_size<T, N + 1, Hi, right_index>();
+    }
+  } else {  // the answer could be in [Lo, N-1] or [N+1, Hi]
+    constexpr size_t left = struct_size<T, Lo, N - 1, left_index>();
+    if constexpr (left > 0) {  // valid size in [Lo, N-1] => there can't be a valid size
+                               // in [N+1, Hi] anymore
+      return left;
+    } else if constexpr (N == Hi) {  // [N+1, Hi] is empty => [Lo, Hi] has no valid size
+      return 0;
+    } else {  // there can only be a valid size in [N+1, Hi], if there is none the
+              // recursion returns 0 anyway
+      return struct_size<T, N + 1, Hi, right_index>();
+    }
+  }
 }
 
 // struct_get implementation {{{2
@@ -153,6 +115,11 @@ template <typename... Ts> struct remove_ref_in_tuple<std::tuple<Ts...>> {
 };
 template <typename T1, typename T2> struct remove_ref_in_tuple<std::pair<T1, T2>> {
   using type = std::pair<std::remove_reference_t<T1>, std::remove_reference_t<T2>>;
+};
+
+template <> struct struct_get<0> {
+  template <class T> std::tuple<> to_tuple_ref(T &&) { return {}; }
+  template <class T> std::tuple<> to_tuple(const T &) { return {}; }
 };
 
 template <> struct struct_get<1> {
@@ -170,13 +137,15 @@ template <> struct struct_get<1> {
   }
   template <size_t N, class T> const auto &get(const T &obj)
   {
+    static_assert(N == 0);
     auto && [a] = obj;
     return a;
   }
   template <size_t N, class T> auto &get(T &obj)
   {
+    static_assert(N == 0);
     auto && [a] = obj;
-return a;
+    return a;
   }
 };
 
@@ -207,6 +176,7 @@ template <> struct struct_get<2> {
   }
   template <size_t N, class T> auto &get(T &&obj)
   {
+    static_assert(N < 2);
     auto &&[a, b] = obj;
     return std::get<N>(std::forward_as_tuple(a, b));
   }
@@ -228,34 +198,118 @@ template <> struct struct_get<2> {
     }                                                                                    \
     template <size_t N, class T> auto &get(T &&obj)                                      \
     {                                                                                    \
+      static_assert(N < size_);                                                          \
       auto &&[__VA_ARGS__] = obj;                                                        \
       return std::get<N>(std::forward_as_tuple(__VA_ARGS__));                            \
     }                                                                                    \
   }
-VIR_STRUCT_GET_(26, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z);
-VIR_STRUCT_GET_(25, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y);
-VIR_STRUCT_GET_(24, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x);
-VIR_STRUCT_GET_(23, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w);
-VIR_STRUCT_GET_(22, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v);
-VIR_STRUCT_GET_(21, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u);
-VIR_STRUCT_GET_(20, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t);
-VIR_STRUCT_GET_(19, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s);
-VIR_STRUCT_GET_(18, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r);
-VIR_STRUCT_GET_(17, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q);
-VIR_STRUCT_GET_(16, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p);
-VIR_STRUCT_GET_(15, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o);
-VIR_STRUCT_GET_(14, a, b, c, d, e, f, g, h, i, j, k, l, m, n);
-VIR_STRUCT_GET_(13, a, b, c, d, e, f, g, h, i, j, k, l, m);
-VIR_STRUCT_GET_(12, a, b, c, d, e, f, g, h, i, j, k, l);
-VIR_STRUCT_GET_(11, a, b, c, d, e, f, g, h, i, j, k);
-VIR_STRUCT_GET_(10, a, b, c, d, e, f, g, h, i, j);
-VIR_STRUCT_GET_( 9, a, b, c, d, e, f, g, h, i);
-VIR_STRUCT_GET_( 8, a, b, c, d, e, f, g, h);
-VIR_STRUCT_GET_( 7, a, b, c, d, e, f, g);
-VIR_STRUCT_GET_( 6, a, b, c, d, e, f);
-VIR_STRUCT_GET_( 5, a, b, c, d, e);
-VIR_STRUCT_GET_( 4, a, b, c, d);
-VIR_STRUCT_GET_( 3, a, b, c);
+VIR_STRUCT_GET_(3, x0, x1, x2);
+VIR_STRUCT_GET_(4, x0, x1, x2, x3);
+VIR_STRUCT_GET_(5, x0, x1, x2, x3, x4);
+VIR_STRUCT_GET_(6, x0, x1, x2, x3, x4, x5);
+VIR_STRUCT_GET_(7, x0, x1, x2, x3, x4, x5, x6);
+VIR_STRUCT_GET_(8, x0, x1, x2, x3, x4, x5, x6, x7);
+VIR_STRUCT_GET_(9, x0, x1, x2, x3, x4, x5, x6, x7, x8);
+VIR_STRUCT_GET_(10, x0, x1, x2, x3, x4, x5, x6, x7, x8, x9);
+VIR_STRUCT_GET_(11, x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10);
+VIR_STRUCT_GET_(12, x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11);
+VIR_STRUCT_GET_(13, x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12);
+VIR_STRUCT_GET_(14, x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13);
+VIR_STRUCT_GET_(15, x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14);
+VIR_STRUCT_GET_(16, x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15);
+VIR_STRUCT_GET_(17, x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15,
+                x16);
+VIR_STRUCT_GET_(18, x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15,
+                x16, x17);
+VIR_STRUCT_GET_(19, x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15,
+                x16, x17, x18);
+VIR_STRUCT_GET_(20, x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15,
+                x16, x17, x18, x19);
+VIR_STRUCT_GET_(21, x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15,
+                x16, x17, x18, x19, x20);
+VIR_STRUCT_GET_(22, x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15,
+                x16, x17, x18, x19, x20, x21);
+VIR_STRUCT_GET_(23, x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15,
+                x16, x17, x18, x19, x20, x21, x22);
+VIR_STRUCT_GET_(24, x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15,
+                x16, x17, x18, x19, x20, x21, x22, x23);
+VIR_STRUCT_GET_(25, x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15,
+                x16, x17, x18, x19, x20, x21, x22, x23, x24);
+VIR_STRUCT_GET_(26, x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15,
+                x16, x17, x18, x19, x20, x21, x22, x23, x24, x25);
+VIR_STRUCT_GET_(27, x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15,
+                x16, x17, x18, x19, x20, x21, x22, x23, x24, x25, x26);
+VIR_STRUCT_GET_(28, x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15,
+                x16, x17, x18, x19, x20, x21, x22, x23, x24, x25, x26, x27);
+VIR_STRUCT_GET_(29, x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15,
+                x16, x17, x18, x19, x20, x21, x22, x23, x24, x25, x26, x27, x28);
+VIR_STRUCT_GET_(30, x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15,
+                x16, x17, x18, x19, x20, x21, x22, x23, x24, x25, x26, x27, x28, x29);
+VIR_STRUCT_GET_(31, x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15,
+                x16, x17, x18, x19, x20, x21, x22, x23, x24, x25, x26, x27, x28, x29,
+                x30);
+VIR_STRUCT_GET_(32, x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15,
+                x16, x17, x18, x19, x20, x21, x22, x23, x24, x25, x26, x27, x28, x29, x30,
+                x31);
+VIR_STRUCT_GET_(33, x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15,
+                x16, x17, x18, x19, x20, x21, x22, x23, x24, x25, x26, x27, x28, x29, x30,
+                x31, x32);
+VIR_STRUCT_GET_(34, x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15,
+                x16, x17, x18, x19, x20, x21, x22, x23, x24, x25, x26, x27, x28, x29, x30,
+                x31, x32, x33);
+VIR_STRUCT_GET_(35, x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15,
+                x16, x17, x18, x19, x20, x21, x22, x23, x24, x25, x26, x27, x28, x29, x30,
+                x31, x32, x33, x34);
+VIR_STRUCT_GET_(36, x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15,
+                x16, x17, x18, x19, x20, x21, x22, x23, x24, x25, x26, x27, x28, x29, x30,
+                x31, x32, x33, x34, x35);
+VIR_STRUCT_GET_(37, x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15,
+                x16, x17, x18, x19, x20, x21, x22, x23, x24, x25, x26, x27, x28, x29, x30,
+                x31, x32, x33, x34, x35, x36);
+VIR_STRUCT_GET_(38, x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15,
+                x16, x17, x18, x19, x20, x21, x22, x23, x24, x25, x26, x27, x28, x29, x30,
+                x31, x32, x33, x34, x35, x36, x37);
+VIR_STRUCT_GET_(39, x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15,
+                x16, x17, x18, x19, x20, x21, x22, x23, x24, x25, x26, x27, x28, x29, x30,
+                x31, x32, x33, x34, x35, x36, x37, x38);
+VIR_STRUCT_GET_(40, x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15,
+                x16, x17, x18, x19, x20, x21, x22, x23, x24, x25, x26, x27, x28, x29, x30,
+                x31, x32, x33, x34, x35, x36, x37, x38, x39);
+VIR_STRUCT_GET_(41, x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15,
+                x16, x17, x18, x19, x20, x21, x22, x23, x24, x25, x26, x27, x28, x29, x30,
+                x31, x32, x33, x34, x35, x36, x37, x38, x39, x40);
+VIR_STRUCT_GET_(42, x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15,
+                x16, x17, x18, x19, x20, x21, x22, x23, x24, x25, x26, x27, x28, x29, x30,
+                x31, x32, x33, x34, x35, x36, x37, x38, x39, x40, x41);
+VIR_STRUCT_GET_(43, x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15,
+                x16, x17, x18, x19, x20, x21, x22, x23, x24, x25, x26, x27, x28, x29, x30,
+                x31, x32, x33, x34, x35, x36, x37, x38, x39, x40, x41, x42);
+VIR_STRUCT_GET_(44, x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15,
+                x16, x17, x18, x19, x20, x21, x22, x23, x24, x25, x26, x27, x28, x29, x30,
+                x31, x32, x33, x34, x35, x36, x37, x38, x39, x40, x41, x42, x43);
+VIR_STRUCT_GET_(45, x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15,
+                x16, x17, x18, x19, x20, x21, x22, x23, x24, x25, x26, x27, x28, x29, x30,
+                x31, x32, x33, x34, x35, x36, x37, x38, x39, x40, x41, x42, x43, x44);
+VIR_STRUCT_GET_(46, x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15,
+                x16, x17, x18, x19, x20, x21, x22, x23, x24, x25, x26, x27, x28, x29, x30,
+                x31, x32, x33, x34, x35, x36, x37, x38, x39, x40, x41, x42, x43, x44,
+                x45);
+VIR_STRUCT_GET_(47, x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15,
+                x16, x17, x18, x19, x20, x21, x22, x23, x24, x25, x26, x27, x28, x29, x30,
+                x31, x32, x33, x34, x35, x36, x37, x38, x39, x40, x41, x42, x43, x44, x45,
+                x46);
+VIR_STRUCT_GET_(48, x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15,
+                x16, x17, x18, x19, x20, x21, x22, x23, x24, x25, x26, x27, x28, x29, x30,
+                x31, x32, x33, x34, x35, x36, x37, x38, x39, x40, x41, x42, x43, x44, x45,
+                x46, x47);
+VIR_STRUCT_GET_(49, x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15,
+                x16, x17, x18, x19, x20, x21, x22, x23, x24, x25, x26, x27, x28, x29, x30,
+                x31, x32, x33, x34, x35, x36, x37, x38, x39, x40, x41, x42, x43, x44, x45,
+                x46, x47, x48);
+VIR_STRUCT_GET_(50, x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15,
+                x16, x17, x18, x19, x20, x21, x22, x23, x24, x25, x26, x27, x28, x29, x30,
+                x31, x32, x33, x34, x35, x36, x37, x38, x39, x40, x41, x42, x43, x44, x45,
+                x46, x47, x48, x49);
 #undef VIR_STRUCT_GET_
 
 // concept definitions {{{2
@@ -265,7 +319,11 @@ template <typename T> concept has_tuple_size = requires(T x, std::tuple_size<T> 
   struct_get<std::tuple_size_v<T>>().to_tuple(x);
 };
 template <typename T>
-concept aggregate_without_tuple_size = std::is_aggregate_v<T> && !has_tuple_size<T>;
+concept aggregate_without_tuple_size =
+    std::is_aggregate_v<T> && !has_tuple_size<T> && requires (const T& x) {
+  detail::struct_size<T>();
+  detail::struct_get<detail::struct_size<T>()>().to_tuple_ref(x);
+};
 
 // traits {{{2
 template <typename From, typename To> struct copy_cvref {
@@ -286,24 +344,21 @@ template <typename From, typename To> struct copy_cvref {
  *
  * \tparam T An aggregate type or a type specializing `std::tuple_size` that can be
  *           destructured via a structured binding. This implies that either \p T has only
- *           empty bases or \p T has no non-static data members and a single base class
- *           with non-static data members. The uses of aggregate types that do not support
- *           destructuring is ill-formed. The uses of non-aggregate types that do not
- *           support destructuring results in a substitution failure.
- *
- * \tparam MaxSize The maximum number of non-static data members to expect. The
- *                 implementation uses an upper limit of 26.
+ *           empty bases (only up to 3 are supported) or \p T has no non-static data
+ *           members and a single base class with non-static data members. Using
+ *           aggregate types that do not support destructuring is ill-formed. Using
+ *           non-aggregate types that do not support destructuring results in a
+ *           substitution failure.
  */
-template <typename T, std::size_t MaxSize = sizeof(T)>
+template <typename T>
 requires detail::aggregate_without_tuple_size<T> || detail::has_tuple_size<T>
 constexpr inline std::size_t struct_size;
 
-template <detail::aggregate_without_tuple_size T, std::size_t MaxSize>
-constexpr inline std::size_t struct_size<T, MaxSize> =
-    detail::struct_size<T>(std::make_index_sequence<std::min(std::size_t(26), MaxSize)>());
+template <detail::aggregate_without_tuple_size T>
+constexpr inline std::size_t struct_size<T> = detail::struct_size<T>();
 
-template <detail::has_tuple_size T, std::size_t MaxSize>
-constexpr inline std::size_t struct_size<T, MaxSize> = std::tuple_size_v<T>;
+template <detail::has_tuple_size T>
+constexpr inline std::size_t struct_size<T> = std::tuple_size_v<T>;
 
 /**
  * Returns a cv-qualified reference to the \p N -th non-static data member in \p obj.
@@ -327,19 +382,23 @@ using struct_element_t =
 /**
  * Returns a std::tuple with a copy of all the non-static data members of \p obj.
  */
-template <class T, std::size_t Total = struct_size<std::remove_cvref_t<T>>>
+template <class T>
+requires requires { struct_size<std::remove_cvref_t<T>>; }
 auto to_tuple(T &&obj)
 {
-  return detail::struct_get<Total>().to_tuple(std::forward<T>(obj));
+  return detail::struct_get<struct_size<std::remove_cvref_t<T>>>().to_tuple(
+      std::forward<T>(obj));
 }
 
 /**
  * Returns a std::tuple of lvalue references to all the non-static data members of \p obj.
  */
-template <class T, std::size_t Total = struct_size<std::remove_cvref_t<T>>>
+template <class T>
+requires requires { struct_size<std::remove_cvref_t<T>>; }
 auto to_tuple_ref(T &&obj)
 {
-  return detail::struct_get<Total>().to_tuple_ref(std::forward<T>(obj));
+  return detail::struct_get<struct_size<std::remove_cvref_t<T>>>().to_tuple_ref(
+      std::forward<T>(obj));
 }
 
 /**
@@ -347,6 +406,7 @@ auto to_tuple_ref(T &&obj)
  * data members of \p T.
  */
 template <class T>
+requires requires { struct_size<std::remove_cvref_t<T>>; }
 struct as_tuple
     : detail::copy_cvref<
           T, decltype(detail::struct_get<struct_size<std::remove_cvref_t<T>>>().to_tuple(
