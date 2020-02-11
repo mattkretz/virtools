@@ -4,8 +4,7 @@ os:
   - linux
   - osx
 
-# Linux should use the "newer" 14.04 release (12.04 is default)
-dist: trusty
+dist: bionic
 
 compiler:
   - gcc
@@ -14,13 +13,13 @@ compiler:
 addons:
   apt:
     sources:
-      - ubuntu-toolchain-r-test
+      - sourceline: 'ppa:ubuntu-toolchain-r/test'
     packages:
-      - g++-6
+      - g++-10
 
 before_script:
   - case "$TRAVIS_OS_NAME-$CXX" in
-    linux-g++) export CXX=g++-6 CC=gcc-6;;
+    linux-g++) export CXX=g++-10 CC=gcc-10;;
     esac
   - $CXX --version
   - cmake --version
