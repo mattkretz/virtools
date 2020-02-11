@@ -55,7 +55,9 @@ int main() {
       while (count < rate * 20) {
         ++count;
         for (int i = tw; i; --i) {
+#ifndef _MSC_VER
           asm volatile("nop");
+#endif
         }
         limiter.maybe_sleep();
       }
