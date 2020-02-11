@@ -28,12 +28,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef VIR_RATELIMIT_H_
 #define VIR_RATELIMIT_H_
 
+#include <algorithm>
 #include <cassert>
-#include <string>
-#include <iostream>
-#include <iomanip>
-#include <thread>
 #include <chrono>
+#include <thread>
 
 namespace vir
 {
@@ -71,7 +69,6 @@ public:
     }
     skip_check_count = std::max(1, int(std::chrono::milliseconds(5) / tw_req));
     count = skip_check_count;
-    //std::cerr << "skip_check_count: " << skip_check_count << '\n';
   }
 
   /**
@@ -91,7 +88,6 @@ public:
       } else {
         tw = (1 * tw + 3 * (now - start_time) / skip_check_count) / 4;
       }
-      //std::ostringstream s; s << "tw = " << std::setw(10) << duration_cast<nanoseconds>(tw).count() << "ns, req = " << duration_cast<nanoseconds>(tw_req).count() << "ns, ";
       if (tw > tw_req * 65 / 64) {
         // the time between maybe_sleep calls is more than 1% too long
         // fix it by reducing ts towards 0 and if ts = 0 doesn't suffice, increase
@@ -99,12 +95,10 @@ public:
         if (ts > clock::duration::zero()) {
           ts = std::max(clock::duration::zero(),
                         ts - (tw - tw_req) * skip_check_count * 1 / 2);
-          //std::cerr << s.str() << "maybe_sleep: going too slow; sleep less: " << duration_cast<microseconds>(ts).count() << "µs\n";
         } else {
           skip_check_count =
               std::min(int(seconds(1) / tw_req),  // recheck at least every second
                        (skip_check_count * 5 + 3) / 4);
-          //std::cerr << s.str() << "maybe_sleep: going too slow; work more: " << skip_check_count << "\n";
         }
       } else if (tw < tw_req * 63 / 64) {
         // the time between maybe_sleep calls is more than 1% too short
@@ -119,10 +113,8 @@ public:
         if (skip_check_count > min_skip_count) {
           assert(ts == clock::duration::zero());
           skip_check_count = std::max(min_skip_count, skip_check_count * 3 / 4);
-          //std::cerr << s.str() << "maybe_sleep: going too fast; work less: " << skip_check_count << "\n";
         } else {
           ts += (tw_req - tw) * (skip_check_count * 7) / 8;
-          //std::cerr << s.str() << "maybe_sleep: going too fast; sleep more: " << duration_cast<microseconds>(ts).count() << "µs\n";
         }
       }
 
