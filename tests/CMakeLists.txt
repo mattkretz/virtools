@@ -6,6 +6,13 @@ if(DEFINED ENV{APPVEYOR})
 endif()
 
 include(CheckCXXCompilerFlag)
+
+CHECK_CXX_SOURCE_COMPILES("#include <cxxabi.h>
+int main() { return 0; }" cxx_abi_header_works)
+if(cxx_abi_header_works)
+   add_definitions(-DHAVE_CXX_ABI_H)
+endif()
+
 macro(try_stdflag flag)
    string(REGEX REPLACE "[-.+/:= ]" "_" flag_esc "${flag}")
    check_cxx_compiler_flag("-std=${flag}" supports_${flag_esc})
@@ -16,7 +23,8 @@ macro(try_stdflag flag)
    endif()
 endmacro()
 
-try_stdflag("c++17" "c++1z" "c++14" "c++1y")
+try_stdflag("c++20" "c++2a" "c++17" "c++1z" "c++14" "c++1y")
+#try_stdflag("c++14" "c++1y")
 
 function(vir_add_test name)
    set(target ${name})
