@@ -15,11 +15,11 @@ addons:
     sources:
       - sourceline: 'ppa:ubuntu-toolchain-r/test'
     packages:
-      - g++-10
+      - g++-9
 
 before_script:
   - case "$TRAVIS_OS_NAME-$CXX" in
-    linux-g++) export CXX=g++-10 CC=gcc-10;;
+    linux-g++) export CXX=g++-9 CC=gcc-9;;
     esac
   - $CXX --version
   - cmake --version
