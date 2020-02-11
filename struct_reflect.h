@@ -28,6 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef VIR_STRUCT_SIZE_H_
 #define VIR_STRUCT_SIZE_H_
 #if defined __cpp_structured_bindings && defined __cpp_concepts && __cpp_concepts >= 201907
+#define VIR_HAVE_STRUCT_REFLECT 1
 #include <utility>
 #include <tuple>
 

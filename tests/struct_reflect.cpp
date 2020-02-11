@@ -29,6 +29,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../struct_reflect.h"
 #include <vir/metahelpers.h>
 
+#ifdef VIR_HAVE_STRUCT_REFLECT
+
 struct A {
     int a;
 };
@@ -263,3 +265,5 @@ TEST(to_pair)
   COMPARE(d, 2);
   COMPARE(f, 2);
 }
+
+#endif // VIR_HAVE_STRUCT_REFLECT
