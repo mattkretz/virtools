@@ -29,41 +29,52 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <atomic>
 #include <iostream>
 #include <thread>
+#ifdef _MSC_VER
+#include <intrin.h>
+#endif
 
 int main() {
   for (int tw : {0, 10, 1000, 100000}) {
-    for (float rate : {0.1f, 1.5f, 1.f, 10.f, 100.f, 1000.f, 10000.f, 100000.f, 1000000.f,
+    std::atomic<unsigned> count = {};
+    std::atomic<bool> quit = false;
+
+    std::thread rate_checker([&count, &quit]() {
+      std::this_thread::sleep_for(std::chrono::milliseconds(1));
+      while (true) {
+        const unsigned lastcount = count;
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+        const unsigned elapsed = count - lastcount;
+        if (quit) {
+          return;
+        }
+        std::cout << elapsed << " Hz\n" << std::flush;
+      }
+    });
+
+    for (float rate : {0.1f, 1.f, 1.5f, 10.f, 100.f, 1000.f, 10000.f, 100000.f, 1000000.f,
                        10000000.f}) {
       // consider tw as ~ns
       if (tw >= 1'000'000'000ll / rate) {
         continue;
       }
       std::cerr << "requested rate: " << rate << " Hz, work loop: " << tw << '\n';
-      std::atomic<int> count = {};
-
-      std::thread rate_checker([&count, rate]() {
-        int lastcount = count;
-        while (lastcount < rate * 20) {
-          std::this_thread::sleep_for(std::chrono::seconds(1));
-          int tmp = count;
-          std::cerr << (tmp - lastcount) << " Hz\n";
-          lastcount = tmp;
-        }
-      });
 
       vir::RateLimiter limiter(rate);
       while (count < rate * 20) {
         ++count;
         for (int i = tw; i; --i) {
-#ifndef _MSC_VER
+#ifdef _MSC_VER
+          __nop();
+#else
           asm volatile("nop");
 #endif
         }
         limiter.maybe_sleep();
       }
-
-      rate_checker.join();
     }
+
+    quit = true;
+    rate_checker.join();
   }
   return 0;
 }
