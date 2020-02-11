@@ -88,8 +88,8 @@ public:
       } else {
         tw = (1 * tw + 3 * (now - start_time) / skip_check_count) / 4;
       }
-      if (tw > tw_req * 65 / 64) {
-        // the time between maybe_sleep calls is more than 1% too long
+      if (tw > tw_req * 257 / 256) {
+        // the time between maybe_sleep calls is ~.4% too long
         // fix it by reducing ts towards 0 and if ts = 0 doesn't suffice, increase
         // skip_check_count
         if (ts > clock::duration::zero()) {
@@ -101,7 +101,7 @@ public:
                        (skip_check_count * 5 + 3) / 4);
         }
       } else if (tw < tw_req * 63 / 64) {
-        // the time between maybe_sleep calls is more than 1% too short
+        // the time between maybe_sleep calls is ~1.6% too short
         // fix it by reducing skip_check_count towards 1 and if skip_check_count = 1
         // doesn't suffice, increase ts
 
