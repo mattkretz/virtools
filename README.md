@@ -7,3 +7,4 @@ This is a collection of code I think might be useful later or to others
 
 [![Build Status](https://travis-ci.org/mattkretz/virtools.svg)](https://travis-ci.org/mattkretz/virtools)
 [![Build status](https://ci.appveyor.com/api/projects/status/5k3wkpxvoqf99ef6?svg=true)](https://ci.appveyor.com/project/mattkretz/virtools)
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/10cff73c9b7f4c698a6a1f14aafd8c07)](https://www.codacy.com/manual/mattkretz/virtools?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=mattkretz/virtools&amp;utm_campaign=Badge_Grade)
