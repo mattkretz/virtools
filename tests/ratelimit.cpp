@@ -38,7 +38,7 @@ struct Tester {
   std::thread thr;
 
   Tester(int tw, float rate)
-      : thr([=, this] {
+      : thr([tw, rate, this] {
         const auto start = std::chrono::steady_clock::now();
         vir::RateLimiter limiter(rate);
         unsigned count = 0;
@@ -65,7 +65,9 @@ struct Tester {
   {
   }
 
-  void join()
+  Tester(Tester&&) = default;
+
+  ~Tester()
   {
     thr.join();
     std::cout << result << '\n';
@@ -88,7 +90,4 @@ int main()
   }
   std::cout << "testing RateLimiter with " << testers.size()
             << " configurations in progress...\n" << std::flush;
-  for (auto& t : testers) {
-    t.join();
-  }
 }
