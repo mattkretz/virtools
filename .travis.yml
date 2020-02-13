@@ -17,6 +17,11 @@ addons:
     packages:
       - g++-9
 
+matrix:
+  exclude:
+    - os: osx
+      compiler: gcc
+
 before_script:
   - case "$TRAVIS_OS_NAME-$CXX" in
     linux-g++) export CXX=g++-9 CC=gcc-9;;
